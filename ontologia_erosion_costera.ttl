@@ -1,0 +1,321 @@
+@prefix : <http://www.tesis-ejemplo.com/ont/erosion-costera#> .
+@prefix dc: <http://purl.org/dc/elements/1.1/> .
+@prefix ns: <http://www.w3.org/2003/06/sw-vocab-status/ns#> .
+@prefix geo: <http://www.opengis.net/ont/geosparql#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix ssn: <http://www.w3.org/ns/ssn/> .
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix bibo: <http://purl.org/ontology/bibo/> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix sosa: <http://www.w3.org/ns/sosa/> .
+@prefix vann: <http://purl.org/vocab/vann/> .
+@prefix eroco: <http://www.tesis-ejemplo.com/ont/erosion-costera#> .
+@prefix terms: <http://purl.org/dc/terms/> .
+@prefix vann2: <http://purl.org/vocab/vann#> .
+@prefix eroco1: <http://www.tesis-ejemplo.com/ont/erosion-costera#eroco:> .
+@prefix schema: <https://schema.org/> .
+@prefix schema1: <http://schema.org/> .
+@prefix iot-lite: <http://purl.oclc.org/NET/UNIS/fiware/iot-lite#> .
+@prefix wgs84_pos: <http://www.w3.org/2003/01/geo/wgs84_pos#> .
+@prefix iot-stream: <http://purl.org/iot/ontology/iot-stream#> .
+@base <http://www.tesis-ejemplo.com/ont/erosion-costera#> .
+
+<http://www.tesis-ejemplo.com/ont/erosion-costera> rdf:type owl:Ontology ;
+                                                    owl:versionIRI <http://www.tesis-ejemplo.com/ont/erosion-costera/1.0.0> ;
+                                                    owl:imports <http://purl.org/iot/ontology/iot-stream/v1.0> ,
+                                                                <http://www.opengis.net/ont/geosparql/1.1> ,
+                                                                ssn: .
+
+#################################################################
+#    Data properties
+#################################################################
+
+###  http://www.tesis-ejemplo.com/ont/erosion-costera#eroco:valorNumerico
+eroco1:valorNumerico rdf:type owl:DatatypeProperty ;
+                     rdfs:subPropertyOf owl:topDataProperty ;
+                     rdfs:range xsd:decimal .
+
+
+#################################################################
+#    Classes
+#################################################################
+
+###  http://www.tesis-ejemplo.com/ont/StreamObservation
+<http://www.tesis-ejemplo.com/ont/StreamObservation> rdf:type owl:Class .
+
+
+###  http://www.tesis-ejemplo.com/ont/erosion-costera#AlturaDeOla
+eroco:AlturaDeOla rdf:type owl:Class ;
+                  rdfs:subClassOf sosa:ObservableProperty ,
+                                  [ rdf:type owl:Restriction ;
+                                    owl:onProperty ssn:isPropertyOf ;
+                                    owl:someValuesFrom eroco:ZonaCostera
+                                  ] .
+
+
+###  http://www.tesis-ejemplo.com/ont/erosion-costera#GeometriaCostera
+eroco:GeometriaCostera rdf:type owl:Class ;
+                       rdfs:subClassOf geo:Geometry ,
+                                       [ rdf:type owl:Restriction ;
+                                         owl:onProperty sosa:hasFeatureOfInterest ;
+                                         owl:someValuesFrom eroco:ZonaCostera
+                                       ] ,
+                                       [ rdf:type owl:Restriction ;
+                                         owl:onProperty geo:asWKT ;
+                                         owl:someValuesFrom geo:wktLiteral
+                                       ] .
+
+
+###  http://www.tesis-ejemplo.com/ont/erosion-costera#ObservacionDeErosion
+eroco:ObservacionDeErosion rdf:type owl:Class ;
+                           rdfs:subClassOf sosa:Observation ,
+                                           [ rdf:type owl:Restriction ;
+                                             owl:onProperty iot-stream:isContainedIn ;
+                                             owl:someValuesFrom eroco:StreamDeErosion
+                                           ] ,
+                                           [ rdf:type owl:Restriction ;
+                                             owl:onProperty sosa:hasFeatureOfInterest ;
+                                             owl:someValuesFrom eroco:ZonaCostera
+                                           ] ,
+                                           [ rdf:type owl:Restriction ;
+                                             owl:onProperty sosa:hasResult ;
+                                             owl:someValuesFrom eroco:ResultadoDeErosion
+                                           ] ,
+                                           [ rdf:type owl:Restriction ;
+                                             owl:onProperty sosa:madeBySensor ;
+                                             owl:someValuesFrom eroco:SensorCostero
+                                           ] ,
+                                           [ rdf:type owl:Restriction ;
+                                             owl:onProperty sosa:observedProperty ;
+                                             owl:someValuesFrom eroco:TasaDeErosion
+                                           ] .
+
+
+###  http://www.tesis-ejemplo.com/ont/erosion-costera#ObservacionDeOleaje
+eroco:ObservacionDeOleaje rdf:type owl:Class ;
+                          rdfs:subClassOf sosa:Observation ,
+                                          [ rdf:type owl:Restriction ;
+                                            owl:onProperty iot-stream:isContainedIn ;
+                                            owl:someValuesFrom eroco:StreamDeOleaje
+                                          ] ,
+                                          [ rdf:type owl:Restriction ;
+                                            owl:onProperty sosa:hasFeatureOfInterest ;
+                                            owl:someValuesFrom eroco:ZonaCostera
+                                          ] ,
+                                          [ rdf:type owl:Restriction ;
+                                            owl:onProperty sosa:madeBySensor ;
+                                            owl:someValuesFrom eroco:SensorDeOleaje
+                                          ] ,
+                                          [ rdf:type owl:Restriction ;
+                                            owl:onProperty sosa:observedProperty ;
+                                            owl:someValuesFrom eroco:AlturaDeOla
+                                          ] .
+
+
+###  http://www.tesis-ejemplo.com/ont/erosion-costera#ResultadoDeErosion
+eroco:ResultadoDeErosion rdf:type owl:Class ;
+                         rdfs:subClassOf sosa:Result ,
+                                         [ rdf:type owl:Restriction ;
+                                           owl:onProperty iot-lite:hasUnit ;
+                                           owl:someValuesFrom eroco:UnidadDeMedida
+                                         ] ,
+                                         [ rdf:type owl:Restriction ;
+                                           owl:onProperty sosa:isResultOf ;
+                                           owl:someValuesFrom eroco:ObservacionDeErosion
+                                         ] ,
+                                         [ rdf:type owl:Restriction ;
+                                           owl:onProperty eroco1:valorNumerico ;
+                                           owl:someValuesFrom xsd:decimal
+                                         ] .
+
+
+###  http://www.tesis-ejemplo.com/ont/erosion-costera#ResultadoDeOleaje
+eroco:ResultadoDeOleaje rdf:type owl:Class ;
+                        rdfs:subClassOf sosa:Result ,
+                                        [ rdf:type owl:Restriction ;
+                                          owl:onProperty iot-lite:hasUnit ;
+                                          owl:someValuesFrom eroco:UnidadDeMedida
+                                        ] ,
+                                        [ rdf:type owl:Restriction ;
+                                          owl:onProperty sosa:hasResult ;
+                                          owl:someValuesFrom eroco:ResultadoDeOleaje
+                                        ] ,
+                                        [ rdf:type owl:Restriction ;
+                                          owl:onProperty sosa:isResultOf ;
+                                          owl:someValuesFrom eroco:ObservacionDeOleaje
+                                        ] ,
+                                        [ rdf:type owl:Restriction ;
+                                          owl:onProperty eroco1:valorNumerico ;
+                                          owl:someValuesFrom xsd:decimal
+                                        ] .
+
+
+###  http://www.tesis-ejemplo.com/ont/erosion-costera#SensorCostero
+eroco:SensorCostero rdf:type owl:Class ;
+                    rdfs:subClassOf sosa:Sensor ,
+                                    [ rdf:type owl:Restriction ;
+                                      owl:onProperty sosa:observes ;
+                                      owl:someValuesFrom eroco:TasaDeErosion
+                                    ] .
+
+
+###  http://www.tesis-ejemplo.com/ont/erosion-costera#SensorDeOleaje
+eroco:SensorDeOleaje rdf:type owl:Class ;
+                     rdfs:subClassOf sosa:Sensor ,
+                                     [ rdf:type owl:Restriction ;
+                                       owl:onProperty sosa:observes ;
+                                       owl:someValuesFrom eroco:AlturaDeOla
+                                     ] .
+
+
+###  http://www.tesis-ejemplo.com/ont/erosion-costera#StreamDeErosion
+eroco:StreamDeErosion rdf:type owl:Class ;
+                      rdfs:subClassOf <http://www.tesis-ejemplo.com/ont/StreamObservation> ,
+                                      [ rdf:type owl:Restriction ;
+                                        owl:onProperty geo:sfContains ;
+                                        owl:someValuesFrom eroco:ObservacionDeErosion
+                                      ] .
+
+
+###  http://www.tesis-ejemplo.com/ont/erosion-costera#StreamDeOleaje
+eroco:StreamDeOleaje rdf:type owl:Class ;
+                     rdfs:subClassOf <http://www.tesis-ejemplo.com/ont/StreamObservation> ,
+                                     [ rdf:type owl:Restriction ;
+                                       owl:onProperty geo:sfContains ;
+                                       owl:someValuesFrom eroco:ObservacionDeOleaje
+                                     ] .
+
+
+###  http://www.tesis-ejemplo.com/ont/erosion-costera#TasaDeErosion
+eroco:TasaDeErosion rdf:type owl:Class ;
+                    rdfs:subClassOf sosa:ObservableProperty ,
+                                    [ rdf:type owl:Restriction ;
+                                      owl:onProperty sosa:isObservedBy ;
+                                      owl:someValuesFrom eroco:SensorCostero
+                                    ] ,
+                                    [ rdf:type owl:Restriction ;
+                                      owl:onProperty ssn:isPropertyOf ;
+                                      owl:someValuesFrom eroco:ZonaCostera
+                                    ] .
+
+
+###  http://www.tesis-ejemplo.com/ont/erosion-costera#UnidadDeMedida
+eroco:UnidadDeMedida rdf:type owl:Class .
+
+
+###  http://www.tesis-ejemplo.com/ont/erosion-costera#ZonaCostera
+eroco:ZonaCostera rdf:type owl:Class ;
+                  rdfs:subClassOf geo:Feature ,
+                                  [ rdf:type owl:Restriction ;
+                                    owl:onProperty geo:hasGeometry ;
+                                    owl:someValuesFrom eroco:GeometriaCostera
+                                  ] ,
+                                  [ rdf:type owl:Restriction ;
+                                    owl:onProperty ssn:hasProperty ;
+                                    owl:someValuesFrom eroco:AlturaDeOla
+                                  ] ,
+                                  [ rdf:type owl:Restriction ;
+                                    owl:onProperty ssn:hasProperty ;
+                                    owl:someValuesFrom eroco:TasaDeErosion
+                                  ] .
+
+
+#################################################################
+#    Individuals
+#################################################################
+
+###  http://www.tesis-ejemplo.com/ont/erosion-costera#CentimetrosPorAño
+eroco:CentimetrosPorAño rdf:type owl:NamedIndividual ,
+                                 eroco:UnidadDeMedida ;
+                        rdfs:label "\"Centímetros por Año\""@es .
+
+
+###  http://www.tesis-ejemplo.com/ont/erosion-costera#Geometria_PlayaNorte
+eroco:Geometria_PlayaNorte rdf:type owl:NamedIndividual ,
+                                    eroco:GeometriaCostera ;
+                           geo:asWKT "\"POLYGON((-79.5 9.1, -79.4 9.1, -79.4 9.0, -79.5 9.0, -79.5 9.1))\""^^geo:wktLiteral .
+
+
+###  http://www.tesis-ejemplo.com/ont/erosion-costera#Metros
+eroco:Metros rdf:type owl:NamedIndividual ,
+                      eroco:UnidadDeMedida ;
+             rdfs:label "Metros"@es .
+
+
+###  http://www.tesis-ejemplo.com/ont/erosion-costera#ObsErosion_20251020
+eroco:ObsErosion_20251020 rdf:type owl:NamedIndividual ,
+                                   eroco:ObservacionDeErosion ;
+                          iot-stream:isContainedIn eroco:Stream_SensorGPS_001 ;
+                          sosa:hasFeatureOfInterest eroco:PlayaNorte ;
+                          sosa:hasResult eroco:ResObs_20251020 ;
+                          sosa:madeBySensor eroco:SensorGPS_001 ;
+                          sosa:observedProperty eroco:Propiedad_TasaDeErosion .
+
+
+###  http://www.tesis-ejemplo.com/ont/erosion-costera#ObsOleaje_20251020
+eroco:ObsOleaje_20251020 rdf:type owl:NamedIndividual ,
+                                  eroco:ObservacionDeOleaje ;
+                         iot-stream:isContainedIn eroco:Stream_Boya_002 ;
+                         sosa:hasFeatureOfInterest eroco:PlayaNorte ;
+                         sosa:hasResult eroco:ResOleaje_20251020 ;
+                         sosa:madeBySensor eroco:SensorBoya_002 ;
+                         sosa:observedProperty eroco:Propiedad_AlturaDeOla .
+
+
+###  http://www.tesis-ejemplo.com/ont/erosion-costera#PlayaNorte
+eroco:PlayaNorte rdf:type owl:NamedIndividual ,
+                          eroco:ZonaCostera ;
+                 geo:hasGeometry eroco:Geometria_PlayaNorte .
+
+
+###  http://www.tesis-ejemplo.com/ont/erosion-costera#Propiedad_AlturaDeOla
+eroco:Propiedad_AlturaDeOla rdf:type owl:NamedIndividual ,
+                                     eroco:AlturaDeOla .
+
+
+###  http://www.tesis-ejemplo.com/ont/erosion-costera#Propiedad_TasaDeErosion
+eroco:Propiedad_TasaDeErosion rdf:type owl:NamedIndividual ,
+                                       eroco:TasaDeErosion .
+
+
+###  http://www.tesis-ejemplo.com/ont/erosion-costera#ResObs_20251020
+eroco:ResObs_20251020 rdf:type owl:NamedIndividual ,
+                               eroco:ResultadoDeErosion ;
+                      iot-lite:hasUnit eroco:CentimetrosPorAño ;
+                      eroco1:valorNumerico 5.3 ;
+                      sosa:resultTime "2025-10-20T13:41:00Z"^^xsd:dateTime .
+
+
+###  http://www.tesis-ejemplo.com/ont/erosion-costera#ResOleaje_20251020
+eroco:ResOleaje_20251020 rdf:type owl:NamedIndividual ,
+                                  eroco:ResultadoDeOleaje ;
+                         iot-lite:hasUnit eroco:Metros ;
+                         eroco1:valorNumerico 2.1 ;
+                         sosa:resultTime "2025-10-20T14:30:00Z"^^xsd:dateTime .
+
+
+###  http://www.tesis-ejemplo.com/ont/erosion-costera#SensorBoya_002
+eroco:SensorBoya_002 rdf:type owl:NamedIndividual ,
+                              eroco:SensorDeOleaje .
+
+
+###  http://www.tesis-ejemplo.com/ont/erosion-costera#SensorGPS_001
+eroco:SensorGPS_001 rdf:type owl:NamedIndividual ,
+                             eroco:SensorCostero .
+
+
+###  http://www.tesis-ejemplo.com/ont/erosion-costera#Stream_Boya_002
+eroco:Stream_Boya_002 rdf:type owl:NamedIndividual ,
+                               eroco:StreamDeOleaje .
+
+
+###  http://www.tesis-ejemplo.com/ont/erosion-costera#Stream_SensorGPS_001
+eroco:Stream_SensorGPS_001 rdf:type owl:NamedIndividual ,
+                                    eroco:StreamDeErosion .
+
+
+###  Generated by the OWL API (version 4.5.29.2024-05-13T12:11:03Z) https://github.com/owlcs/owlapi
