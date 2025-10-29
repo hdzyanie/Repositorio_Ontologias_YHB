@@ -1,4 +1,4 @@
-name: OQuaRE - Evaluación de Ontologías
+name: OQuaRE - Evaluación de Ontologías (Coastal Erosion)
 
 on:
   workflow_dispatch:
@@ -12,7 +12,6 @@ permissions:
 jobs:
   oquare:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -22,11 +21,32 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
+
+      - name: Instalar Python 3.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+
+      - name: Ejecutar OQuaRE (v3.0) sobre la ontología de erosión costera
+        uses: tecnomod-um/oquare-metrics@v3.0
+        with:
+          ontology-folders: "ontologies"
+          ontology-files: "ontologies/ontologia_erosion_costera.ttl"
+          contents-folder: "OQuaRE"
+          reasoner: "ELK"
+          model-plot: "true"
+          feature-plot: "true"
+          subfeature-plot: "true"
+          metrics-plots: "true"
+          evolution-plot: "false"
+
+      - name: Listar resultados OQuaRE (comprobación)
+        run: |
+          echo "Contenido de la carpeta OQuaRE (si existe):"
+          ls -la OQuaRE || true
+
       - name: Empaquetar resultados OQuaRE
         run: |
-          echo "Archivos OQuaRE (listando):"
-          ls -la OQuaRE || true
-          # Crear zip con todo el folder de resultados
           zip -r oquare-results.zip OQuaRE || true
 
       - name: Upload OQuaRE results as artifact
@@ -35,15 +55,99 @@ jobs:
           name: oquare-results
           path: oquare-results.zip
 
-      - name: Instalar Python 3.9
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.9'
+      - name: Instalar dependencias Python para reporte
+        run: |
+          python -m pip install --upgrade pip
+          pip install pandas matplotlib
 
-      - name: Ejecutar OQuaRE
-        uses: tecnomod-um/oquare-metrics@v3.0
-        with:
-          ontology-folders: "ontologies"
-          contents-folder: "OQuaRE"
-          reasoner: "ELK"
+      - name: Generar CSV y gráficos desde resultados OQuaRE
+        run: |
+          mkdir -p oquare_report
+          python3 - <<'PY'
+import json, os, glob
+import pandas as pd
+import matplotlib.pyplot as plt
 
+# Patrón: todos los json bajo OQuaRE/ (recursivo)
+json_files = glob.glob('OQuaRE/**/*.json', recursive=True)
+rows = []
+
+for jf in json_files:
+    try:
+        data = json.load(open(jf, 'r', encoding='utf-8'))
+    except Exception as e:
+        continue
+
+    # Intentar extraer métricas en forma robusta
+    # 1) Si 'metrics' existe y es dict o list
+    metrics_block = None
+    for candidate in ('metrics','results','evaluations','features'):
+        if candidate in data:
+            metrics_block = data[candidate]
+            break
+    if metrics_block is None:
+        metrics_block = data
+
+    # Normalizar varias estructuras
+    if isinstance(metrics_block, dict):
+        # recorrer claves numéricas y subdicts
+        def flatten_dict(prefix, d):
+            for k,v in d.items():
+                key = f"{prefix}.{k}" if prefix else k
+                if isinstance(v, (int,float)):
+                    rows.append({'file': jf, 'metric': key, 'value': v})
+                elif isinstance(v, dict):
+                    flatten_dict(key, v)
+                elif isinstance(v, list):
+                    # si la lista contiene dicts con name/value
+                    for item in v:
+                        if isinstance(item, dict):
+                            name = item.get('name') or item.get('metric') or None
+                            val = item.get('value') or item.get('score') or None
+                            if name and isinstance(val,(int,float)):
+                                rows.append({'file': jf, 'metric': f"{key}.{name}", 'value': val})
+        flatten_dict('', metrics_block)
+
+    elif isinstance(metrics_block, list):
+        for item in metrics_block:
+            if isinstance(item, dict):
+                name = item.get('name') or item.get('metric') or 'unknown'
+                val = item.get('value') or item.get('score') or None
+                if isinstance(val,(int,float)):
+                    rows.append({'file': jf, 'metric': name, 'value': val})
+
+# Guardar CSV pivotado (filas: file, columnas: metric)
+if rows:
+    df = pd.DataFrame(rows)
+    pivot = df.pivot_table(index='file', columns='metric', values='value', aggfunc='first')
+    pivot.to_csv('oquare_report/metrics.csv')
+    # Gráfico: promedio por métrica
+    avg = pivot.mean(axis=0).sort_values(ascending=False)
+    plt.figure(figsize=(10,4))
+    avg.plot(kind='bar')
+    plt.title('Promedio de métricas OQuaRE')
+    plt.tight_layout()
+    plt.savefig('oquare_report/metrics_summary.png')
+    # Gráfico: conteo de métricas por archivo
+    counts = pivot.count(axis=1).sort_values(ascending=False)
+    plt.figure(figsize=(8,3))
+    counts.plot(kind='bar')
+    plt.title('Número de métricas por archivo JSON')
+    plt.tight_layout()
+    plt.savefig('oquare_report/metrics_count_per_file.png')
+else:
+    # archivo vacío para evitar errores posteriores
+    pd.DataFrame().to_csv('oquare_report/metrics.csv')
+
+print("Reportes generados: oquare_report/metrics.csv, *_png")
+PY
+
+      - name: Empaquetar reportes y subir artifact
+        run: |
+          zip -r oquare-report.zip oquare_report || true
+
+      - name: Upload OQuaRE report artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: oquare-report
+          path: oquare-report.zip
