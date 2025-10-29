@@ -1,14 +1,31 @@
-name: OQuaRE - Sanity check
+name: OQuaRE - Diagnostic
 
 on:
   workflow_dispatch:
+  push:
+    paths:
+      - 'ontologies/**'
 
 jobs:
-  test:
+  diag:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Print hello
-        run: echo "GitHub Actions working"
+      - name: Show repo files
+        run: |
+          echo "Root files:"
+          ls -la
+          echo "Ontologies folder:"
+          ls -la ontologies || true
+
+      - name: Check Java version
+        run: |
+          sudo apt-get update -y
+          java -version || true
+
+      - name: Check Python
+        run: |
+          python3 --version || true
+          pip --version || true
