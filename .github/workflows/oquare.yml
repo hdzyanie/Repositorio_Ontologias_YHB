@@ -22,6 +22,18 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
+      - name: Empaquetar resultados OQuaRE
+        run: |
+          echo "Archivos OQuaRE (listando):"
+          ls -la OQuaRE || true
+          # Crear zip con todo el folder de resultados
+          zip -r oquare-results.zip OQuaRE || true
+
+      - name: Upload OQuaRE results as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: oquare-results
+          path: oquare-results.zip
 
       - name: Instalar Python 3.9
         uses: actions/setup-python@v5
