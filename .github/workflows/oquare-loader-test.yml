@@ -1,0 +1,88 @@
+name: OQuaRE - Loader Test
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'ontologies/**'
+
+permissions:
+  contents: read
+
+jobs:
+  loader-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Show repository root & ontologies listing
+        run: |
+          echo "Root files:"
+          ls -la
+          echo ""
+          echo "Contents of ontologies/ (if present):"
+          ls -la ontologies || true
+
+      - name: Show first 120 lines of the TTL file (for quick inspection)
+        run: |
+          echo "----- head of ontologies/ontologia_erosion_costera.ttl -----"
+          sed -n '1,120p' ontologies/ontologia_erosion_costera.ttl || true
+          echo "----- end head -----"
+
+      - name: Setup Python 3.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+
+      - name: Install rdflib and attempt to parse the Turtle file
+        run: |
+          python -m pip install --upgrade pip
+          pip install rdflib
+          python - <<'PY'
+import sys
+from rdflib import Graph
+
+ttl_path = "ontologies/ontologia_erosion_costera.ttl"
+report = []
+
+try:
+    g = Graph()
+    # force turtle parser
+    g.parse(ttl_path, format='turtle')
+    triples = len(g)
+    report.append(f"PARSE_OK: Successfully parsed '{ttl_path}'")
+    report.append(f"TRIPLES_COUNT: {triples}")
+except Exception as e:
+    report.append("PARSE_ERROR: Exception while parsing TTL")
+    report.append(str(e))
+    # write a file for artifact with the exception for debugging
+    with open('loader_parse_report.txt','w',encoding='utf-8') as fh:
+        fh.write("\\n".join(report))
+    print("\\n".join(report))
+    sys.exit(2)
+
+with open('loader_parse_report.txt','w',encoding='utf-8') as fh:
+    fh.write("\\n".join(report))
+
+print("\\n".join(report))
+PY
+
+      - name: Show parse report
+        run: |
+          echo "---- parse report (loader_parse_report.txt) ----"
+          cat loader_parse_report.txt || true
+          echo "-----------------------------------------------"
+
+      - name: Package TTL and parse report
+        run: |
+          mkdir -p oquare_loader_output
+          cp ontologies/ontologia_erosion_costera.ttl oquare_loader_output/ || true
+          cp loader_parse_report.txt oquare_loader_output/ || true
+          zip -r oquare-loader-output.zip oquare_loader_output || true
+
+      - name: Upload loader artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: oquare-loader-output
+          path: oquare-loader-output.zip
